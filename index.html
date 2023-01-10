@@ -9,24 +9,48 @@
       background: #0f0f23;
       color: #cccccc;
       font-family: "Source Code Pro", monospace;
-      font-size: 10pt;
+      font-size: 12pt;
+    }
+
+    h2 {
+      font-weight: normal;
+      text-decoration: none;
+      color: #00cc00;
+      text-shadow: 0 0 2px #00cc00, 0 0 5px #00cc00;
+    }
+
+    table {
+      border-collapse: collapse;
     }
 
     td {
+      border-left: 1px solid #21214f;
       text-align: right;
-      padding-right: 2px;
-      padding-left: 2px;
+      padding-right: 2pt;
+      padding-left: 2pt;
+    }
+
+    th {
+      font-weight: normal;
     }
 
     th.name {
       text-align: left
     }
+
+    .silver {
+      color: #9999cc
+    }
+
+    .gold {
+      color: #ffff66
+    }
   </style>
 </head>
 
 <body>
-  <h2>Time from 1st to 2nd star</h2>
-  <table id="t">
+  <h2>Seconds from <span class="silver">silver</span> to <span class="gold">gold</span> star</h2>
+  <table id="aoc-stats">
     <tr>
       <th></th>
       <th>1</th>
@@ -57,12 +81,17 @@
     </tr>
   </table>
   <script>
-    function getColor(pos, total) {
-      const best = [0x00, 0xff, 0x00]
-      const worst = [0xff, 0x00, 0x00]
-      const componentStep = (i) => total <= 1 ? 0 : (worst[i] - best[i]) / (total - 1)
+    const gradientColor = (from, to, percentile) => {
+      const inc = (i) => Math.round((to[i] - from[i]) * percentile)
+      return [ from[0] + inc(0), from[1] + inc(1), from[2] + inc(2)]
+    }
+
+
+    function getColor(index, total) {
+      const percentile = total <= 1 ? 0 : index / (total - 1)
+      const col = percentile <= 0.5 ? gradientColor([0, 0xcc, 0], [0xff, 0xff, 0x66], 2 * percentile) : gradientColor([0xff, 0xff, 0x66], [0xcc, 0, 0], 2 * (percentile - 0.5))
       const componentVal = (i) => {
-        const v = '00' + (best[i] + Math.round(pos * componentStep(i))).toString(16)
+        const v = '00' + col[i].toString(16)
         return v.substring(v.length - 2)
       }
       return `#${componentVal(0)}${componentVal(1)}${componentVal(2)}`
@@ -126,7 +155,7 @@
 
         // render stats
         const names = [...starDiff.keys()]
-        var t = document.getElementById("t");
+        var t = document.getElementById("aoc-stats");
         names.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))
         for (name of names) {
           var row = t.insertRow(-1)
