@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang=en>
+
+<head>
+  <meta charset=utf-8>
+  <title>AoC stats</title>
+  <style>
+    body {
+      background: #0f0f23;
+      color: #cccccc;
+      font-family: "Source Code Pro", monospace;
+      font-size: 10pt;
+    }
+
+    td {
+      text-align: right;
+      padding-right: 2px;
+      padding-left: 2px;
+    }
+
+    th.name {
+      text-align: left
+    }
+  </style>
+</head>
+
+<body>
+  <h2>Time from 1st to 2nd star</h2>
+  <table id="t">
+    <tr>
+      <th></th>
+      <th>1</th>
+      <th>2</th>
+      <th>3</th>
+      <th>4</th>
+      <th>5</th>
+      <th>6</th>
+      <th>7</th>
+      <th>8</th>
+      <th>9</th>
+      <th>10</th>
+      <th>11</th>
+      <th>12</th>
+      <th>13</th>
+      <th>14</th>
+      <th>15</th>
+      <th>16</th>
+      <th>17</th>
+      <th>18</th>
+      <th>19</th>
+      <th>20</th>
+      <th>21</th>
+      <th>22</th>
+      <th>23</th>
+      <th>24</th>
+      <th>25</th>
+    </tr>
+  </table>
+  <script>
+    function getColor(pos, total) {
+      const best = [0x00, 0xff, 0x00]
+      const worst = [0xff, 0x00, 0x00]
+      const componentStep = (i) => total <= 1 ? 0 : (worst[i] - best[i]) / (total - 1)
+      const componentVal = (i) => {
+        const v = '00' + (best[i] + Math.round(pos * componentStep(i))).toString(16)
+        return v.substring(v.length - 2)
+      }
+      return `#${componentVal(0)}${componentVal(1)}${componentVal(2)}`
+    }
+
+    const formatDuration = (time) => {
+      const s = time % 60
+      const m = Math.floor(time / 60) % 60
+      const h = Math.floor(time / 3600) % 24
+      const d = Math.floor(time / (24 * 3600))
+      let result = `${d}d${h}h${m}m${s}s`
+      while (result.startsWith('0')) {
+        result = result.substring(2)
+      }
+      return result
+    }
+
+    fetch("https://endokrinologieprosek.cz/aoc/raw-data.php")
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`)
+        }
+        return response.json()
+      })
+      .then((response) => {
+
+        // extract stats
+        let starDiff = new Map()
+        const members = response.members
+        for (memberId in members) {
+          const memStarDiff = new Map()
+          starDiff.set(members[memberId].name, memStarDiff)
+          const dayData = members[memberId].completion_day_level
+          for (day in dayData) {
+            if (!!dayData[day]["2"]) {
+              let part2Time = dayData[day]["2"].get_star_ts - dayData[day]["1"].get_star_ts
+              memStarDiff.set(day, part2Time)
+            }
+          }
+        }
+
+        starDiff = new Map([...starDiff].filter(([k, v]) => v.size > 0));
+
+        // calculate order in a given day
+        const dailyPositions = []
+        for (let day = 1; day <= 25; day++) {
+          const dayTimes = []
+          const k = `${day}`
+          starDiff.forEach((value, key) => {
+            if (value.has(k)) {
+              dayTimes.push({ name: key, time: value.get(k) })
+            }
+          })
+          dayTimes.sort((a, b) => a.time - b.time)
+          const dailyOrder = new Map()
+          for (let i = 0; i < dayTimes.length; i++) {
+            dailyOrder.set(dayTimes[i].name, i)
+          }
+          dailyPositions[day] = dailyOrder
+        }
+
+        // render stats
+        const names = [...starDiff.keys()]
+        var t = document.getElementById("t");
+        names.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))
+        for (name of names) {
+          var row = t.insertRow(-1)
+          const nameCell = document.createElement("th")
+          nameCell.appendChild(document.createTextNode(name))
+          nameCell.classList.add('name');
+          row.appendChild(nameCell)
+          for (let day = 1; day <= 25; day++) {
+            var c = row.insertCell(-1)
+            const time = starDiff.get(name).get(`${day}`)
+            if (!!time) {
+              c.appendChild(document.createTextNode(time))
+              let dailyPos = dailyPositions[day].get(name)
+              c.setAttribute('title', `${dailyPos + 1} / ${dailyPositions[day].size}`)
+              c.setAttribute('style', `color: ${getColor(dailyPos, dailyPositions[day].size)}`)
+            }
+          }
+        }
+      });
+  </script>
+</body>
+
+</html>
