@@ -19,6 +19,14 @@
       text-shadow: 0 0 2px #00cc00, 0 0 5px #00cc00;
     }
 
+    #year {
+      background: #0f0f23;
+      color: #00cc00;
+      font-family: "Source Code Pro", monospace;
+      font-size: 1em;
+      text-shadow: 0 0 2px #00cc00, 0 0 5px #00cc00;
+    }
+
     table {
       border-collapse: collapse;
     }
@@ -49,7 +57,7 @@
 </head>
 
 <body>
-  <h2>Seconds from <span class="silver">silver</span> to <span class="gold">gold</span> star</h2>
+  <h2>AoC <select id="year" onchange="loadData()"></select>: Seconds from <span class="silver">silver</span> to <span class="gold">gold</span> star</h2>
   <table id="aoc-stats">
     <tr>
       <th></th>
@@ -109,7 +117,15 @@
       return result
     }
 
-    fetch("https://endokrinologieprosek.cz/aoc/raw-data.php")
+    function loadData() {
+      const year = yearSelect.value
+      var t = document.getElementById("aoc-stats");
+      let oldRows = [...document.getElementsByTagName("tr")]
+      for (let i = 1; i < oldRows.length; i++) {
+        oldRows[i].remove()
+      }
+
+      fetch(`https://endokrinologieprosek.cz/aoc/${year}/leaderboard.json`)
       .then((response) => {
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`)
@@ -155,7 +171,6 @@
 
         // render stats
         const names = [...starDiff.keys()]
-        var t = document.getElementById("aoc-stats");
         names.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))
         for (name of names) {
           var row = t.insertRow(-1)
@@ -175,6 +190,22 @@
           }
         }
       });
+    }
+
+    const nowEst = new Date((new Date()).toLocaleString('en-US', {timeZone: 'EST'}))
+    let thisYear = nowEst.getFullYear()
+    if (nowEst.getMonth() < 11) {
+      thisYear--
+    }
+    const yearSelect = document.getElementById("year")
+    for(let y = thisYear; y >= 2020; y--) {
+      let opt = document.createElement("option")
+      opt.value = y
+      opt.innerHTML = y
+      yearSelect.append(opt)
+    }
+    loadData()
+
   </script>
 </body>
 
