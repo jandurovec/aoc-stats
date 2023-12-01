@@ -139,7 +139,8 @@
         const members = response.members
         for (memberId in members) {
           const memStarDiff = new Map()
-          starDiff.set(members[memberId].name, memStarDiff)
+          const memberKey = !!members[memberId].name ? members[memberId].name : `(anon. #${memberId})`
+          starDiff.set(memberKey, memStarDiff)
           const dayData = members[memberId].completion_day_level
           for (day in dayData) {
             if (!!dayData[day]["2"]) {
