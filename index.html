@@ -110,9 +110,9 @@
       const m = Math.floor(time / 60) % 60
       const h = Math.floor(time / 3600) % 24
       const d = Math.floor(time / (24 * 3600))
-      let result = `${d}d${h}h${m}m${s}s`
-      while (result.startsWith('0')) {
-        result = result.substring(2)
+      let result = `${d}d ${h}h ${m}m ${s}s`
+      while (result.startsWith('0') && result.includes(' ')) {
+        result = result.substring(3)
       }
       return result
     }
@@ -185,7 +185,7 @@
             if (!!time) {
               c.appendChild(document.createTextNode(time))
               let dailyPos = dailyPositions[day].get(name)
-              c.setAttribute('title', `${dailyPos + 1} / ${dailyPositions[day].size}`)
+              c.setAttribute('title', `${dailyPos + 1} / ${dailyPositions[day].size} (${formatDuration(time)})`)
               c.setAttribute('style', `color: ${getColor(dailyPos, dailyPositions[day].size)}`)
             }
           }
